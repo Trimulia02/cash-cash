@@ -1,0 +1,40 @@
+<nav class="navbar navbar-expand-lg bg-white shadow-sm py-1">
+  <div class="container">
+    <!-- LOGO -->
+    <a class="navbar-brand fw-bold" href="/">Cashcas</a>
+
+    <!-- TOGGLER -->
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- NAV CONTENT -->
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <!-- SEARCH (TENGAH) -->
+      <div class="mx-auto">
+        <form class="d-flex shadow-sm rounded" action="/search" method="GET">
+          <input
+            type="text"
+            name="query"
+            class="form-control border-0 py-1"
+            placeholder="Search..."
+          />
+          <button class="btn btn-light" type="submit">
+            <i class="bi bi-search"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- BUTTON (KANAN) -->
+      <div class="d-flex gap-2">
+        <a href="/login/add" class="btn btn-sm btn-primary">Login</a>
+        <button class="btn btn-sm btn-outline-primary">Profile</button>
+      </div>
+    </div>
+  </div>
+</nav>

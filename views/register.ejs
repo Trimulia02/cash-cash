@@ -1,78 +1,103 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Register - E-Wallet</title>
+<%- include('header') %>
+<body class="bg-gradient-to-br from-blue-500 via-blue-600 to-purple-700 min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-md bg-white rounded-lg shadow-2xl p-8">
+    <!-- Logo -->
+    <div class="text-center text-5xl mb-4">💰</div>
+    
+    <!-- Title -->
+    <h1 class="text-3xl font-bold text-center text-blue-600 mb-6">Create Account</h1>
 
-    <!-- Bootstrap CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Error Message -->
+    <% if (error) { %>
+      <div class="bg-red-100 border-l-4 border-red-600 text-red-700 p-4 mb-4 rounded">
+        <strong>Error:</strong> <%= error %>
+      </div>
+    <% } %>
 
-    <style>
-        body {
-            background: linear-gradient(to right, #4facfe, #00f2fe);
-            height: 100vh;
-        }
+    <!-- Registration Form -->
+    <form method="POST" class="space-y-4">
+      <!-- Full Name Input -->
+      <div>
+        <label for="name" class="block text-gray-700 font-semibold mb-2">Full Name</label>
+        <input 
+          type="text" 
+          id="name" 
+          name="name" 
+          required
+          placeholder="John Doe"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
+        >
+      </div>
 
-        .card {
-            border-radius: 15px;
-        }
+      <!-- Email Input -->
+      <div>
+        <label for="email" class="block text-gray-700 font-semibold mb-2">Email Address</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          required
+          placeholder="your@email.com"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
+        >
+      </div>
 
-        .form-control {
-            border-radius: 10px;
-        }
+      <!-- Phone Number Input -->
+      <div>
+        <label for="phone" class="block text-gray-700 font-semibold mb-2">Phone Number (Optional)</label>
+        <input 
+          type="tel" 
+          id="phone" 
+          name="phone"
+          placeholder="08xxxxxxxxxx"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
+        >
+      </div>
 
-        .btn-primary {
-            border-radius: 10px;
-            background-color: #4facfe;
-            border: none;
-        }
+      <!-- Password Input -->
+      <div>
+        <label for="password" class="block text-gray-700 font-semibold mb-2">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          required
+          placeholder="Minimum 6 characters"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
+        >
+      </div>
 
-        .btn-primary:hover {
-            background-color: #3a8de0;
-        }
-    </style>
-</head>
-<body>
+      <!-- Confirm Password Input -->
+      <div>
+        <label for="passwordConfirm" class="block text-gray-700 font-semibold mb-2">Confirm Password</label>
+        <input 
+          type="password" 
+          id="passwordConfirm" 
+          name="passwordConfirm" 
+          required
+          placeholder="Repeat password"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
+        >
+      </div>
 
-<div class="d-flex justify-content-center align-items-center h-100">
-    <div class="card shadow p-4" style="width: 400px;">
-        
-        <h3 class="text-center mb-4">💳 E-Wallet Register</h3>
+      <!-- Submit Button -->
+      <button 
+        type="submit" 
+        class="w-full py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition mt-6"
+      >
+        Register
+      </button>
+    </form>
 
-        <form action="/register/add" method="POST">
-
-            <div class="mb-3">
-                <label>Name</label>
-                <input type="text" name="name" class="form-control" placeholder="Masukkan nama" required>
-            </div>
-
-            <div class="mb-3">
-                <label>Email</label>
-                <input type="email" name="email" class="form-control" placeholder="Masukkan email" required>
-            </div>
-
-            <div class="mb-3">
-                <label>Password</label>
-                <input type="password" name="password" class="form-control" placeholder="Masukkan password" required>
-            </div>
-
-            <!-- OPTIONAL ERROR MESSAGE -->
-            <% if (error) { %>
-                <div class="alert alert-danger">
-                    <%= error %>
-                </div>
-            <% } %>
-
-            <button type="submit" class="btn btn-primary w-100">Register</button>
-
-        </form>
-
-        <p class="text-center mt-3">
-            Sudah punya akun? <a href="/login/add">Login</a>
-        </p>
-
+    <!-- Login Link -->
+    <div class="text-center mt-6 text-gray-600">
+      Already have an account? 
+      <a href="/login/add" class="text-blue-600 font-semibold hover:underline">
+        Login here
+      </a>
     </div>
-</div>
+  </div>
 
+  <%- include('footer') %>
 </body>
 </html>

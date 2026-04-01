@@ -1,30 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-  <!-- START HEADER -->
-   <%- include('./header', {}) %>
-   <!-- END HEADER -->
-  <body>
-    <div class="container mb-4">
+<%- include('header') %>
+<body class="bg-gradient-to-br from-blue-500 via-blue-600 to-purple-700 min-h-screen">
+  <%- include('navbar') %>
 
-    <!-- START NAVBAR -->
-     <div class="mb-4">
-    <%- include('./navbar',{}) %>
-    </div>
-    <!-- END NAVBAR -->
-
-    <!-- START HALAMAN -->
-    <!-- START COROSEL -->
-     <div class="mb-4">
-      <%- include('./corosel', {})  %>
+  <div class="flex items-center justify-center min-h-screen pt-20 pb-10 px-4">
+    <div class="bg-white rounded-lg shadow-2xl p-8 max-w-2xl w-full">
+      <!-- Header -->
+      <h1 class="text-4xl font-bold text-center text-blue-600 mb-4">Welcome to Cash-Cash</h1>
+      <p class="text-center text-gray-600 text-lg mb-8 leading-relaxed">
+        Your personal e-wallet application for secure and convenient financial management
+      </p>
+      
+      <!-- Features Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="border-l-4 border-blue-600 bg-gray-50 p-6 rounded">
+          <h3 class="text-xl font-bold text-blue-600 mb-2">💳 Digital Wallet</h3>
+          <p class="text-gray-600">Manage your digital wallet securely with real-time balance updates</p>
+        </div>
+        <div class="border-l-4 border-blue-600 bg-gray-50 p-6 rounded">
+          <h3 class="text-xl font-bold text-blue-600 mb-2">🔄 Money Transfer</h3>
+          <p class="text-gray-600">Transfer money to other users instantly with atomic transactions</p>
+        </div>
+        <div class="border-l-4 border-blue-600 bg-gray-50 p-6 rounded">
+          <h3 class="text-xl font-bold text-blue-600 mb-2">📊 Transactions</h3>
+          <p class="text-gray-600">Track all your transactions in one place with detailed history</p>
+        </div>
+        <div class="border-l-4 border-blue-600 bg-gray-50 p-6 rounded">
+          <h3 class="text-xl font-bold text-blue-600 mb-2">🛍️ Payments</h3>
+          <p class="text-gray-600">Make payments to merchants securely and conveniently</p>
+        </div>
       </div>
-    <!-- END COROSEL -->
-    <!-- START PRODUCT -->
-    <%- include('./product', {})  %>
-    <!-- END PRODUCT -->
-    <!-- END HALAMAN -->
+
+      <!-- CTA Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <% if (!isAuthenticated) { %>
+          <a href="/login/add" class="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition text-center">
+            Login
+          </a>
+          <a href="/register/add" class="px-8 py-3 border-2 border-blue-600 text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition text-center">
+            Register
+          </a>
+        <% } else { %>
+          <a href="/dashboard" class="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition text-center">
+            Go to Dashboard
+          </a>
+        <% } %>
+      </div>
     </div>
-    <!-- START FOOTER -->
-     <%- include('./footer', {}) %>
-     <!-- END FOOTER -->
-  </body>
+  </div>
+
+  <%- include('footer') %>
+</body>
 </html>

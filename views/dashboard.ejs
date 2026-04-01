@@ -1,0 +1,98 @@
+<%- include('header') %>
+<body class="bg-gray-50">
+  <%- include('navbar') %>
+
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <!-- Page Title -->
+    <h1 class="text-4xl font-bold text-blue-600 mb-6">Dashboard</h1>
+
+    <!-- Welcome Section -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h2 class="text-2xl font-semibold text-gray-800 mb-2">Welcome back, <strong><%= user.name %></strong>! 👋</h2>
+      <p class="text-gray-600">Here's your wallet summary and recent activity</p>
+    </div>
+
+    <% if (user && user.wallet) { %>
+      <!-- Wallet Card -->
+      <div class="bg-gradient-to-br from-blue-600 to-purple-700 text-white rounded-lg shadow-lg p-8 mb-8">
+        <h2 class="text-xl mb-4 opacity-90">Your Wallet Balance</h2>
+        <div class="text-5xl font-bold mb-4">Rp <%= user.wallet.balance.toLocaleString('id-ID') %></div>
+        <p class="opacity-75">Account Balance</p>
+
+        <!-- Wallet Info Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 pt-8 border-t border-white border-opacity-20">
+          <div class="text-center">
+            <label class="block text-sm opacity-80 mb-1">Wallet ID</label>
+            <value class="block text-lg font-semibold"><%= user.wallet.id %></value>
+          </div>
+          <div class="text-center">
+            <label class="block text-sm opacity-80 mb-1">Created</label>
+            <value class="block text-lg font-semibold"><%= new Date(user.wallet.createdAt).toLocaleDateString('id-ID') %></value>
+          </div>
+          <div class="text-center">
+            <label class="block text-sm opacity-80 mb-1">Status</label>
+            <value class="block text-lg font-semibold">Active ✅</value>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <a href="/transfers" class="bg-white hover:shadow-lg transition p-6 rounded-lg text-center">
+          <div class="text-3xl mb-2">🔄</div>
+          <div class="font-semibold text-gray-800">Transfer Money</div>
+          <p class="text-sm text-gray-600">Send to others</p>
+        </a>
+        <a href="/merchants" class="bg-white hover:shadow-lg transition p-6 rounded-lg text-center">
+          <div class="text-3xl mb-2">🛍️</div>
+          <div class="font-semibold text-gray-800">Pay Merchant</div>
+          <p class="text-sm text-gray-600">Shop & pay</p>
+        </a>
+        <a href="/transactions" class="bg-white hover:shadow-lg transition p-6 rounded-lg text-center">
+          <div class="text-3xl mb-2">📊</div>
+          <div class="font-semibold text-gray-800">View History</div>
+          <p class="text-sm text-gray-600">Transaction log</p>
+        </a>
+        <a href="/" class="bg-white hover:shadow-lg transition p-6 rounded-lg text-center">
+          <div class="text-3xl mb-2">🏠</div>
+          <div class="font-semibold text-gray-800">Home</div>
+          <p class="text-sm text-gray-600">Back to home</p>
+        </a>
+      </div>
+
+      <!-- Recent Transactions -->
+      <% if (user.wallet.transactions && user.wallet.transactions.length > 0) { %>
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+          <div class="p-6 border-b border-gray-200">
+            <h2 class="text-2xl font-bold text-blue-600">📝 Recent Transactions</h2>
+          </div>
+          <div class="divide-y max-h-96 overflow-y-auto">
+            <% user.wallet.transactions.slice(0, 5).forEach(txn => { %>
+              <div class="p-4 hover:bg-gray-50 transition">
+                <div class="flex justify-between items-center">
+                  <div>
+                    <strong class="text-gray-800"><%= txn.direction || txn.description %></strong>
+                    <br>
+                    <small class="text-gray-500"><%= new Date(txn.createdAt).toLocaleDateString('id-ID') %></small>
+                  </div>
+                  <div class="text-right">
+                    <span class="<%= txn.type === 'debit' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700' %> px-3 py-1 rounded-full text-sm font-semibold">
+                      <%= txn.type === 'debit' ? '−' : '+' %> Rp <%= (txn.amount).toLocaleString('id-ID') %>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="bg-white rounded-lg shadow-md p-8 text-center text-gray-500">
+          📭 No transactions yet. Start by making a transfer or payment!
+        </div>
+      <% } %>
+    <% } %>
+  </div>
+
+  <%- include('footer') %>
+</body>
+</html>

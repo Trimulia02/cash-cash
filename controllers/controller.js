@@ -65,7 +65,7 @@ class Controller {
       // Create wallet for user
       await Wallet.create({
         userId: user.userId,
-        balance: 100000, // Initial balance
+        balance: 500000, // Initial balance
       });
 
       res.redirect("/login/add?success=Registration successful");

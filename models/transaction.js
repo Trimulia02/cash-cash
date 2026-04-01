@@ -94,25 +94,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "Transaction",
-      hooks: {
-        afterCreate: async (transaction, options) => {
-          // Update wallet balance after transaction creation
-          const wallet = await sequelize.models.Wallet.findByPk(
-            transaction.walletId,
-            {
-              transaction: options.transaction,
-            },
-          );
-          if (wallet) {
-            if (transaction.type === "debit") {
-              wallet.balance -= transaction.amount;
-            } else {
-              wallet.balance += transaction.amount;
-            }
-            await wallet.save({ transaction: options.transaction });
-          }
-        },
-      },
+      timestamps: true,
     },
   );
 

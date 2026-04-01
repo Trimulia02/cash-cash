@@ -13,23 +13,52 @@
     <% const categoryQuery = currentCategory ? '&category=' + encodeURIComponent(currentCategory) : ''; %>
 
     <!-- Search Form -->
-    <form class="bg-white rounded-lg shadow-md p-6 mb-8 flex flex-col sm:flex-row gap-4" action="/merchants" method="GET">
-      <input
-        type="text"
-        name="category"
-        value="<%= currentCategory %>"
-        placeholder="Filter by category (e.g. Food, Retail, Telecom)"
-        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-      >
-      <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
-        🔍 Search
-      </button>
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <div class="mb-4">
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">🔍 Filter Merchants by Category</h2>
+        <p class="text-gray-600 text-sm">
+          Search merchants by category to find what you need. 
+          <strong>Examples:</strong> Food, Retail, Telecom, Entertainment, Utilities, etc.
+        </p>
+      </div>
+      
+      <form class="flex flex-col sm:flex-row gap-3" action="/merchants" method="GET">
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Merchant Category</label>
+          <input
+            type="text"
+            name="category"
+            value="<%= currentCategory %>"
+            placeholder="e.g., Food, Retail, Telecom, Entertainment"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+          >
+        </div>
+        <div class="flex gap-2 items-end">
+          <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition whitespace-nowrap">
+            🔍 Search
+          </button>
+          <% if (currentCategory) { %>
+            <a href="/merchants" class="px-6 py-2 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-100 transition whitespace-nowrap">
+              ✕ Clear Filter
+            </a>
+          <% } %>
+        </div>
+      </form>
+      
       <% if (currentCategory) { %>
-        <a href="/merchants" class="px-6 py-2 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-red-600 hover:text-red-600 transition">
-          ✕ Clear
-        </a>
+        <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p class="text-sm text-blue-700">
+            <strong>Active Filter:</strong> Showing merchants in category "<strong><%= currentCategory %></strong>"
+          </p>
+        </div>
+      <% } else { %>
+        <div class="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+          <p class="text-sm text-gray-600">
+            💡 <strong>Tip:</strong> Leave the category empty to view all merchants
+          </p>
+        </div>
       <% } %>
-    </form>
+    </div>
 
     <!-- Error Message -->
     <% if (hasError) { %>

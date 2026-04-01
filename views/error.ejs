@@ -1,39 +1,73 @@
 <%- include('header') %>
-<body class="bg-gradient-to-br from-blue-500 via-blue-600 to-purple-700 min-h-screen flex items-center justify-center p-4">
-  <div class="w-full max-w-md bg-white rounded-lg shadow-2xl p-8 text-center">
-    <!-- Error Icon -->
-    <div class="text-7xl mb-4">⚠️</div>
-    
-    <!-- Error Title -->
-    <h1 class="text-3xl font-bold text-red-600 mb-2"><%= title || 'Error' %></h1>
-    
-    <!-- Error Message -->
-    <p class="text-gray-600 leading-relaxed mb-6">
-      <%= message %>
-    </p>
+<body class="bg-gradient-to-br from-red-50 to-red-100 min-h-screen flex items-center justify-center">
+  <%- include('navbar') %>
 
-    <!-- Error Details -->
-    <% if (error && error.message) { %>
-      <div class="bg-gray-100 border-l-4 border-red-600 p-4 rounded mb-6 text-left text-sm text-gray-700">
-        <strong class="block mb-2 text-red-600">Technical Details:</strong>
-        <code class="text-xs"><%= error.message %></code>
+  <div class="max-w-2xl w-full px-4 py-8">
+    <div class="bg-white rounded-lg shadow-2xl p-8 border-l-4 border-red-600">
+      <!-- Error Icon -->
+      <div class="text-6xl mb-4 text-center">
+        <% if (error && error.status === 404) { %>
+          🚫
+        <% } else if (error && error.status === 400) { %>
+          ⚠️
+        <% } else { %>
+          ❌
+        <% } %>
       </div>
-    <% } %>
 
-    <!-- Action Buttons -->
-    <div class="flex flex-col sm:flex-row gap-3 justify-center">
-      <button 
-        onclick="history.back()" 
-        class="px-6 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition"
-      >
-        ← Go Back
-      </button>
-      <button 
-        onclick="location.href='/'" 
-        class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
-      >
-        🏠 Home
-      </button>
+      <!-- Error Title -->
+      <h1 class="text-4xl font-bold text-center text-red-600 mb-3">
+        <%= title || 'Error' %>
+      </h1>
+
+      <!-- Status Code (if available) -->
+      <% if (error && error.status) { %>
+        <div class="text-center mb-6 text-gray-600">
+          <span class="inline-block px-4 py-2 bg-red-100 text-red-700 rounded-full font-mono text-lg font-semibold">
+            Error <%= error.status %>
+          </span>
+        </div>
+      <% } %>
+
+      <!-- Error Message -->
+      <div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+        <p class="text-gray-800 text-lg leading-relaxed">
+          <%= message || 'Something went wrong. Please try again.' %>
+        </p>
+      </div>
+
+      <!-- Additional Error Details (in development) -->
+      <% if (process.env.NODE_ENV !== 'production' && error && error.stack) { %>
+        <div class="bg-gray-900 text-gray-100 rounded-lg p-4 mb-6 overflow-x-auto">
+          <p class="text-xs font-mono whitespace-pre-wrap break-words">
+            <%= error.stack %>
+          </p>
+        </div>
+      <% } %>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition text-center">
+          🏠 Back to Home
+        </a>
+        
+        <% if (typeof user !== 'undefined' && user) { %>
+          <a href="/dashboard" class="px-6 py-3 border-2 border-blue-600 text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition text-center">
+            📊 Go to Dashboard
+          </a>
+        <% } %>
+
+        <button onclick="window.history.back()" class="px-6 py-3 border-2 border-gray-400 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition">
+          ← Go Back
+        </button>
+      </div>
+
+      <!-- Help Text -->
+      <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
+        <p class="text-sm text-gray-700">
+          <strong>Need help?</strong> If this error persists, please contact support or try refreshing the page.
+        </p>
+      </div>
     </div>
   </div>
 

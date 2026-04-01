@@ -15,6 +15,7 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 
 // Session middleware - using memory store for development
+// IMPORTANT: In production, use connect-pg-simple or similar persistent store
 app.use(
   session({
     secret:
@@ -25,6 +26,7 @@ app.use(
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // Only HTTPS in production
+      sameSite: "strict", // CSRF protection
     },
   }),
 );

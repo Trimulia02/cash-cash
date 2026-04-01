@@ -149,19 +149,18 @@ class Controller {
 
   static async getTransactions(req, res) {
     try {
-      const {
-        sort = "createdAt",
-        order = "DESC",
-        page = 1,
-        limit = 10,
-      } = req.query;
+      const sort = req.query.sort || "createdAt";
+      const order = req.query.order || "DESC";
+      const page = req.query.page || 1;
+      const limit = 10;
 
-      const result = await WalletService.getTransactions(req.session.userId, {
+      const result = await WalletService.getTransactions(
+        req.session.userId,
         page,
         limit,
         sort,
         order,
-      });
+      );
 
       res.render("transactions", {
         user: { id: req.session.userId, name: req.session.name },
@@ -179,7 +178,6 @@ class Controller {
         error: null,
       });
     } catch (error) {
-      console.error("Error in getTransactions:", error);
       res.render("transactions", {
         user: {
           id: req.session?.userId || null,
@@ -255,14 +253,13 @@ class Controller {
 
   static async getTransfers(req, res) {
     try {
-      const { page = 1, limit = 10 } = req.query;
+      const page = parseInt(req.query.page, 10) || 1;
+      const limit = parseInt(req.query.limit, 10) || 10;
 
       const result = await TransferService.getTransferHistory(
         req.session.userId,
-        {
-          page,
-          limit,
-        },
+        page,
+        limit,
       );
 
       res.render("transfers", {

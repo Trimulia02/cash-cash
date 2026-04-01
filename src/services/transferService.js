@@ -1,205 +1,104 @@
-const { sequelize, User, Wallet, Transfer, Transaction } = require("../../models");
-const { TRANSACTION_TYPES, TRANSFER_STATUS, VALIDATION_RULES } = require("../constants/transactionTypes");
-const { ERROR_MESSAGES } = require("../constants/errorMessages");
-const WalletService = require("./walletService");
+const {
+  sequelize,
+  User,
+  Wallet,
+  Transfer,
+  Transaction,
+} = require("../../models");
+const {
+  TRANSACTION_TYPES,
+  TRANSFER_STATUS,
+} = require("../constants/transactionTypes");
 
 class TransferService {
-  /**
-   * Create a transfer between two users
-   * CRITICAL FIX: Ensure atomic operations with proper transaction handling
-   */
   static async createTransfer(senderId, receiverId, amount) {
-    const dbTransaction = await sequelize.transaction();
+    if (amount < 1000) throw new Error("Minimum transfer is Rp 1.000");
+    if (senderId === receiverId) throw new Error("Cannot transfer to yourself");
 
-    try {
-      // Validate amount
-      if (amount < VALIDATION_RULES.MIN_TRANSFER) {
-        await dbTransaction.rollback();
-        throw new Error(ERROR_MESSAGES.MIN_TRANSFER_AMOUNT);
-      }
+    const sender = await User.findByPk(senderId);
+    const receiver = await User.findByPk(receiverId);
 
-      // Check if sender and receiver are different
-      if (senderId === receiverId) {
-        await dbTransaction.rollback();
-        throw new Error(ERROR_MESSAGES.CANNOT_TRANSFER_TO_SELF);
-      }
+    if (!sender || !receiver) throw new Error("User not found");
 
-      // Validate users exist
-      const sender = await User.findByPk(senderId, { transaction: dbTransaction });
-      const receiver = await User.findByPk(receiverId, { transaction: dbTransaction });
+    const senderWallet = await Wallet.findOne({ where: { userId: senderId } });
+    const receiverWallet = await Wallet.findOne({
+      where: { userId: receiverId },
+    });
 
-      if (!sender) {
-        await dbTransaction.rollback();
-        throw new Error(ERROR_MESSAGES.SENDER_NOT_FOUND);
-      }
+    if (!senderWallet || !receiverWallet) throw new Error("Wallet not found");
+    if (senderWallet.balance < amount) throw new Error("Insufficient balance");
 
-      if (!receiver) {
-        await dbTransaction.rollback();
-        throw new Error(ERROR_MESSAGES.RECEIVER_NOT_FOUND);
-      }
+    // Create transfer
+    const transfer = await Transfer.create({
+      senderId,
+      receiverId,
+      amount,
+      status: TRANSFER_STATUS.COMPLETED,
+    });
 
-      // Get wallets with locks
-      const senderWallet = await Wallet.findOne(
-        {
-          where: { userId: senderId },
-          lock: true,
-        },
-        { transaction: dbTransaction }
-      );
+    // Create transactions
+    await Transaction.create({
+      walletId: senderWallet.id,
+      amount,
+      type: TRANSACTION_TYPES.DEBIT,
+      direction: `Transfer to ${receiver.name}`,
+      description: `Transfer to ${receiver.name}`,
+    });
 
-      const receiverWallet = await Wallet.findOne(
-        {
-          where: { userId: receiverId },
-          lock: true,
-        },
-        { transaction: dbTransaction }
-      );
+    await Transaction.create({
+      walletId: receiverWallet.id,
+      amount,
+      type: TRANSACTION_TYPES.CREDIT,
+      direction: `Transfer from ${sender.name}`,
+      description: `Transfer from ${sender.name}`,
+    });
 
-      if (!senderWallet) {
-        await dbTransaction.rollback();
-        throw new Error(ERROR_MESSAGES.WALLET_NOT_FOUND);
-      }
+    // Update balances
+    senderWallet.balance -= amount;
+    receiverWallet.balance += amount;
 
-      if (!receiverWallet) {
-        await dbTransaction.rollback();
-        throw new Error(ERROR_MESSAGES.WALLET_NOT_FOUND);
-      }
+    await senderWallet.save();
+    await receiverWallet.save();
 
-      // Check balance using wallet service
-      if (senderWallet.balance < amount) {
-        await dbTransaction.rollback();
-        throw new Error(
-          `${ERROR_MESSAGES.INSUFFICIENT_BALANCE}. Available: Rp ${senderWallet.balance}`
-        );
-      }
-
-      // Create transfer record
-      const transfer = await Transfer.create(
-        {
-          senderId,
-          receiverId,
-          amount,
-          status: TRANSFER_STATUS.COMPLETED,
-        },
-        { transaction: dbTransaction }
-      );
-
-      // Create debit transaction for sender
-      await Transaction.create(
-        {
-          walletId: senderWallet.id,
-          amount,
-          type: TRANSACTION_TYPES.DEBIT,
-          direction: `Transfer to ${receiver.name}`,
-          description: `Transfer to ${receiver.name} (ID: ${receiver.id})`,
-        },
-        { transaction: dbTransaction }
-      );
-
-      // Create credit transaction for receiver
-      await Transaction.create(
-        {
-          walletId: receiverWallet.id,
-          amount,
-          type: TRANSACTION_TYPES.CREDIT,
-          direction: `Transfer from ${sender.name}`,
-          description: `Transfer from ${sender.name} (ID: ${sender.id})`,
-        },
-        { transaction: dbTransaction }
-      );
-
-      // Update wallet balances explicitly (CRITICAL FIX!)
-      senderWallet.balance -= amount;
-      receiverWallet.balance += amount;
-
-      await senderWallet.save({ transaction: dbTransaction });
-      await receiverWallet.save({ transaction: dbTransaction });
-
-      // Commit transaction
-      await dbTransaction.commit();
-
-      return {
-        transferId: transfer.id,
-        from: sender.name,
-        to: receiver.name,
-        amount,
-        status: transfer.status,
-        senderNewBalance: senderWallet.balance,
-        receiverNewBalance: receiverWallet.balance,
-      };
-    } catch (error) {
-      await dbTransaction.rollback();
-      throw error;
-    }
+    return transfer;
   }
 
-  /**
-   * Get transfer history for a user
-   */
-  static async getTransferHistory(userId, { page = 1, limit = 10 } = {}) {
-    try {
-      const offset = (parseInt(page) - 1) * parseInt(limit);
+  static async getTransferHistory(userId, page = 1, limit = 10) {
+    const { Op } = require("sequelize");
+    const offset = (page - 1) * limit;
 
-      const { count, rows } = await Transfer.findAndCountAll({
-        where: {
-          [require("sequelize").Op.or]: [
-            { senderId: userId },
-            { receiverId: userId },
-          ],
-        },
-        include: [
-          {
-            association: "sender",
-            attributes: { exclude: ["password"] },
-          },
-          {
-            association: "receiver",
-            attributes: { exclude: ["password"] },
-          },
-        ],
-        order: [["createdAt", "DESC"]],
-        limit: parseInt(limit),
-        offset,
-      });
+    const { count, rows } = await Transfer.findAndCountAll({
+      where: {
+        [Op.or]: [{ senderId: userId }, { receiverId: userId }],
+      },
+      include: [
+        { association: "sender", attributes: ["id", "name"] },
+        { association: "receiver", attributes: ["id", "name"] },
+      ],
+      order: [["createdAt", "DESC"]],
+      limit,
+      offset,
+    });
 
-      return {
-        count,
-        transfers: rows,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(count / limit),
-      };
-    } catch (error) {
-      throw error;
-    }
+    return {
+      count,
+      transfers: rows,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit),
+    };
   }
 
-  /**
-   * Get single transfer details
-   */
   static async getTransferById(transferId) {
-    try {
-      const transfer = await Transfer.findByPk(transferId, {
-        include: [
-          {
-            association: "sender",
-            attributes: { exclude: ["password"] },
-          },
-          {
-            association: "receiver",
-            attributes: { exclude: ["password"] },
-          },
-        ],
-      });
+    const transfer = await Transfer.findByPk(transferId, {
+      include: [
+        { association: "sender", attributes: ["id", "name"] },
+        { association: "receiver", attributes: ["id", "name"] },
+      ],
+    });
 
-      if (!transfer) {
-        throw new Error(ERROR_MESSAGES.TRANSFER_NOT_FOUND);
-      }
-
-      return transfer;
-    } catch (error) {
-      throw error;
-    }
+    if (!transfer) throw new Error("Transfer not found");
+    return transfer;
   }
 }
 

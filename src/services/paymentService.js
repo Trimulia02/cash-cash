@@ -1,142 +1,62 @@
-const {
-  sequelize,
-  Wallet,
-  Merchant,
-  Payment,
-  Transaction,
-} = require("../../models");
-const {
-  TRANSACTION_TYPES,
-  VALIDATION_RULES,
-} = require("../constants/transactionTypes");
-const { ERROR_MESSAGES } = require("../constants/errorMessages");
+const { Wallet, Merchant, Payment, Transaction } = require("../../models");
+const { TRANSACTION_TYPES } = require("../constants/transactionTypes");
 
 class PaymentService {
-  /**
-   * Create a payment to merchant
-   * CRITICAL FIX: Ensure atomic operations with proper transaction handling
-   */
   static async createPayment(userId, merchantId, amount) {
-    const dbTransaction = await sequelize.transaction();
+    if (amount < 10000) throw new Error("Minimum payment is Rp 10.000");
 
-    try {
-      // Validate amount
-      if (amount < VALIDATION_RULES.MIN_PAYMENT) {
-        await dbTransaction.rollback();
-        throw new Error(ERROR_MESSAGES.MIN_PAYMENT_AMOUNT);
-      }
+    const wallet = await Wallet.findOne({ where: { userId } });
+    if (!wallet) throw new Error("Wallet not found");
 
-      // Get wallet with lock
-      const wallet = await Wallet.findOne(
-        {
-          where: { userId },
-          lock: true,
-        },
-        { transaction: dbTransaction },
-      );
+    const merchant = await Merchant.findByPk(merchantId);
+    if (!merchant) throw new Error("Merchant not found");
 
-      if (!wallet) {
-        await dbTransaction.rollback();
-        throw new Error(ERROR_MESSAGES.WALLET_NOT_FOUND);
-      }
+    if (wallet.balance < amount) throw new Error("Insufficient balance");
 
-      // Check merchant exists
-      const merchant = await Merchant.findByPk(merchantId, {
-        transaction: dbTransaction,
-      });
+    // Create payment
+    const payment = await Payment.create({
+      walletId: wallet.id,
+      merchantId,
+      amount,
+    });
 
-      if (!merchant) {
-        await dbTransaction.rollback();
-        throw new Error(ERROR_MESSAGES.MERCHANT_NOT_FOUND);
-      }
+    // Create transaction record
+    await Transaction.create({
+      walletId: wallet.id,
+      amount,
+      type: TRANSACTION_TYPES.DEBIT,
+      direction: merchant.name,
+      description: `Payment to ${merchant.name}`,
+    });
 
-      // Check balance
-      if (wallet.balance < amount) {
-        await dbTransaction.rollback();
-        throw new Error(
-          `${ERROR_MESSAGES.INSUFFICIENT_BALANCE}. Available: Rp ${wallet.balance}`,
-        );
-      }
+    // Update balance
+    wallet.balance -= amount;
+    await wallet.save();
 
-      // Create payment record
-      const payment = await Payment.create(
-        {
-          walletId: wallet.id,
-          merchantId,
-          amount,
-        },
-        { transaction: dbTransaction },
-      );
-
-      // Create transaction record
-      await Transaction.create(
-        {
-          walletId: wallet.id,
-          amount,
-          type: TRANSACTION_TYPES.DEBIT,
-          direction: merchant.name,
-          description: `Payment to ${merchant.name}`,
-        },
-        { transaction: dbTransaction },
-      );
-
-      // Update wallet balance explicitly (CRITICAL FIX!)
-      wallet.balance -= amount;
-      await wallet.save({ transaction: dbTransaction });
-
-      // Commit transaction
-      await dbTransaction.commit();
-
-      return {
-        paymentId: payment.id,
-        merchant: merchant.name,
-        amount,
-        timestamp: payment.createdAt,
-        newBalance: wallet.balance,
-      };
-    } catch (error) {
-      await dbTransaction.rollback();
-      throw error;
-    }
+    return payment;
   }
 
-  /**
-   * Get payment history
-   */
-  static async getPaymentHistory(userId, { page = 1, limit = 10 } = {}) {
-    try {
-      const offset = (parseInt(page) - 1) * parseInt(limit);
+  static async getPaymentHistory(userId, page = 1, limit = 10) {
+    const offset = (page - 1) * limit;
 
-      const wallet = await Wallet.findOne({
-        where: { userId },
-      });
+    const wallet = await Wallet.findOne({ where: { userId } });
+    if (!wallet) throw new Error("Wallet not found");
 
-      if (!wallet) {
-        throw new Error(ERROR_MESSAGES.WALLET_NOT_FOUND);
-      }
+    const { count, rows } = await Payment.findAndCountAll({
+      where: { walletId: wallet.id },
+      include: [{ association: "merchant" }],
+      order: [["createdAt", "DESC"]],
+      limit,
+      offset,
+    });
 
-      const { count, rows } = await Payment.findAndCountAll({
-        where: { walletId: wallet.id },
-        include: [
-          {
-            association: "merchant",
-          },
-        ],
-        order: [["createdAt", "DESC"]],
-        limit: parseInt(limit),
-        offset,
-      });
-
-      return {
-        count,
-        payments: rows,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(count / limit),
-      };
-    } catch (error) {
-      throw error;
-    }
+    return {
+      count,
+      payments: rows,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit),
+    };
   }
 }
 

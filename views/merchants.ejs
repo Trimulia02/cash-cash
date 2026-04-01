@@ -1,97 +1,55 @@
 <%- include('header') %>
-<body class="bg-gray-50">
+<body class="bg-gray-50 min-h-screen flex flex-col">
   <%- include('navbar') %>
 
-  <div class="max-w-6xl mx-auto px-4 py-8">
-    <!-- Page Title -->
-    <h1 class="text-4xl font-bold text-blue-600 mb-8">🛍️ Merchants</h1>
-
-    <% const currentCategory = typeof category !== 'undefined' ? category : ''; %>
-    <% const hasError = typeof error !== 'undefined' && error; %>
-    <% const hasMerchants = typeof merchants !== 'undefined' && Array.isArray(merchants) && merchants.length > 0; %>
-    <% const hasPagination = typeof pagination !== 'undefined' && pagination; %>
-    <% const categoryQuery = currentCategory ? '&category=' + encodeURIComponent(currentCategory) : ''; %>
+  <div class="max-w-5xl mx-auto px-4 py-8 flex-1 w-full">
+    <h1 class="text-3xl font-bold text-blue-600 mb-6">🛍️ Pay Merchants</h1>
 
     <!-- Search Form -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-      <div class="mb-4">
-        <h2 class="text-lg font-semibold text-gray-800 mb-2">🔍 Filter Merchants by Category</h2>
-        <p class="text-gray-600 text-sm">
-          Search merchants by category to find what you need. 
-          <strong>Examples:</strong> Food, Retail, Telecom, Entertainment, Utilities, etc.
-        </p>
-      </div>
-      
-      <form class="flex flex-col sm:flex-row gap-3" action="/merchants" method="GET">
-        <div class="flex-1">
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Merchant Category</label>
-          <input
-            type="text"
-            name="category"
-            value="<%= currentCategory %>"
-            placeholder="e.g., Food, Retail, Telecom, Entertainment"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-          >
-        </div>
-        <div class="flex gap-2 items-end">
-          <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition whitespace-nowrap">
-            🔍 Search
-          </button>
-          <% if (currentCategory) { %>
-            <a href="/merchants" class="px-6 py-2 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-100 transition whitespace-nowrap">
-              ✕ Clear Filter
-            </a>
-          <% } %>
-        </div>
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+      <form class="flex gap-2" action="/merchants" method="GET">
+        <input
+          type="text"
+          name="category"
+          value="<%= category || '' %>"
+          placeholder="Search by category..."
+          class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+        >
+        <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          Search
+        </button>
+        <% if (category) { %>
+          <a href="/merchants" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100">
+            Clear
+          </a>
+        <% } %>
       </form>
-      
-      <% if (currentCategory) { %>
-        <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p class="text-sm text-blue-700">
-            <strong>Active Filter:</strong> Showing merchants in category "<strong><%= currentCategory %></strong>"
-          </p>
-        </div>
-      <% } else { %>
-        <div class="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-          <p class="text-sm text-gray-600">
-            💡 <strong>Tip:</strong> Leave the category empty to view all merchants
-          </p>
-        </div>
-      <% } %>
     </div>
 
-    <!-- Error Message -->
-    <% if (hasError) { %>
-      <div class="bg-red-100 border-l-4 border-red-600 text-red-700 p-4 mb-8 rounded">
-        <strong>Error:</strong> <%= error %>
+    <!-- Show Message if Error -->
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="bg-red-100 border border-red-400 text-red-700 p-4 mb-6 rounded">
+        <%= error %>
       </div>
     <% } %>
 
     <!-- Merchants Grid -->
-    <% if (hasMerchants) { %>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <% merchants.forEach(function(merchant) { %>
-          <div class="bg-white rounded-lg shadow-md hover:shadow-lg hover:-translate-y-1 transition p-6">
-            <div class="text-3xl mb-3">🏪</div>
-            <h3 class="text-xl font-bold text-blue-600 mb-2"><%= merchant.name %></h3>
-            <span class="inline-block px-3 py-1 bg-gray-100 text-gray-700 text-sm font-semibold rounded mb-4">
-              <%= merchant.category || 'General' %>
-            </span>
-            <p class="text-gray-600 mb-6">
-              Pay <%= merchant.name %> from your wallet
-            </p>
-            <form class="flex gap-2 merchant-pay-form" data-merchant-id="<%= merchant.id %>">
+    <% if (typeof merchants !== 'undefined' && merchants && merchants.length > 0) { %>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <% merchants.forEach(merchant => { %>
+          <div class="bg-white rounded-lg shadow p-4">
+            <h3 class="text-lg font-bold text-gray-800 mb-2"><%= merchant.name %></h3>
+            <p class="text-sm text-gray-500 mb-3"><%= merchant.category || 'General' %></p>
+            
+            <form class="merchant-pay-form flex gap-2" data-merchant-id="<%= merchant.id %>">
               <input 
                 type="number" 
                 placeholder="Amount" 
                 min="10000" 
                 required
-                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm"
+                class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm"
               >
-              <button 
-                type="submit"
-                class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition text-sm"
-              >
+              <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
                 Pay
               </button>
             </form>
@@ -100,30 +58,30 @@
       </div>
 
       <!-- Pagination -->
-      <% if (hasPagination) { %>
-        <div class="flex items-center justify-center gap-2">
+      <% if (typeof pagination !== 'undefined' && pagination) { %>
+        <div class="flex justify-center gap-2">
           <% if (pagination.hasPrevPage) { %>
-            <a href="?page=<%= pagination.page - 1 %><%= categoryQuery %>" class="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition">
-              ← Previous
+            <a href="?page=<%= pagination.page - 1 %><%= category ? '&category=' + encodeURIComponent(category) : '' %>" class="px-4 py-2 border border-blue-600 text-blue-600 rounded hover:bg-blue-50">
+              Previous
             </a>
           <% } %>
 
-          <span class="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold">
+          <span class="px-4 py-2 bg-blue-600 text-white rounded">
             Page <%= pagination.page %> of <%= pagination.pages %>
           </span>
 
           <% if (pagination.hasNextPage) { %>
-            <a href="?page=<%= pagination.page + 1 %><%= categoryQuery %>" class="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition">
-              Next →
+            <a href="?page=<%= pagination.page + 1 %><%= category ? '&category=' + encodeURIComponent(category) : '' %>" class="px-4 py-2 border border-blue-600 text-blue-600 rounded hover:bg-blue-50">
+              Next
             </a>
           <% } %>
         </div>
       <% } %>
     <% } else { %>
-      <div class="bg-white rounded-lg shadow-md p-12 text-center">
-        <div class="text-5xl mb-4">🏪</div>
+      <div class="bg-white rounded-lg shadow p-8 text-center">
+        <p class="text-5xl mb-4">🏪</p>
         <p class="text-gray-500 text-lg">No merchants found</p>
-        <a href="/merchants" class="mt-4 inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+        <a href="/merchants" class="mt-4 inline-block px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
           View All Merchants
         </a>
       </div>
@@ -131,46 +89,36 @@
   </div>
 
   <script>
-    document.querySelectorAll('.merchant-pay-form').forEach(function(form) {
-      form.addEventListener('submit', function(e) {
+    document.querySelectorAll('.merchant-pay-form').forEach(form => {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
         const merchantId = parseInt(form.dataset.merchantId, 10);
-        payMerchant(e, merchantId);
+        const amount = parseInt(form.querySelector('input[type="number"]').value, 10);
+
+        if (!merchantId || merchantId < 1 || !amount || amount < 10000) {
+          alert('Invalid amount (minimum Rp 10.000)');
+          return;
+        }
+
+        try {
+          const res = await fetch('/payments/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ merchantId, amount })
+          });
+          const data = await res.json();
+
+          if (data.success) {
+            alert('Payment successful!');
+            location.reload();
+          } else {
+            alert('Payment failed: ' + data.message);
+          }
+        } catch (err) {
+          alert('Error: ' + err.message);
+        }
       });
     });
-
-    function payMerchant(e, merchantId) {
-      e.preventDefault();
-      if (Number.isNaN(merchantId) || merchantId < 1) {
-        alert('❌ Merchant ID tidak valid');
-        return;
-      }
-
-      const amountInput = e.target.querySelector('input[type="number"]');
-      const parsedAmount = parseInt(amountInput.value, 10);
-
-      if (Number.isNaN(parsedAmount) || parsedAmount < 10000) {
-        alert('❌ Minimum payment is Rp 10.000');
-        return;
-      }
-      
-      fetch('/payments/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ merchantId, amount: parsedAmount })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          alert('✅ Payment successful! Amount: Rp ' + parsedAmount.toLocaleString('id-ID'));
-          location.reload();
-        } else {
-          alert('❌ Payment failed: ' + data.message);
-        }
-      })
-      .catch(err => alert('⚠️ Error: ' + err.message));
-    }
   </script>
 
   <%- include('footer') %>

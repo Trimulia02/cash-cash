@@ -1,7 +1,7 @@
 {
   "development": {
-    "username": "trimuliabahar",
-    "password": "tri100",
+    "username": "postgres",
+    "password": "12345",
     "database": "e-wallet",
     "host": "localhost",
     "dialect": "postgres",
